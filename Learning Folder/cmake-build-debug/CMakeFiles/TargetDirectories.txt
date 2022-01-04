@@ -1,0 +1,3 @@
+C:/Users/bryan/Documents/GitHub/Projects/Learning Folder/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/bryan/Documents/GitHub/Projects/Learning Folder/cmake-build-debug/CMakeFiles/Learning_Folder.dir
+C:/Users/bryan/Documents/GitHub/Projects/Learning Folder/cmake-build-debug/CMakeFiles/rebuild_cache.dir
