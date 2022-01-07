@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, url_for, flash, redirect
+from flask import Flask, render_template, request, url_for, flash, redirect, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from forms import LoginForm, RegistrationForm
 # from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -6,6 +6,7 @@ from forms import LoginForm, RegistrationForm
 # from flask_bcrypt import Bcrypt
 # from flask_mail import Mail, Message
 import json
+# import jsonify
 from datetime import datetime
 import io
 import requests
@@ -46,16 +47,16 @@ class Post(db.Model):
 
 posts = [
     {
-        'author': 'Corey Schafer',
+        'author': 'Bryan Kor',
         'title': 'Blog Post 1',
         'content': 'First post content',
-        'date_posted': 'April 20, 2018'
+        'date_posted': '7th December, 2021'
     },
     {
-        'author': 'Jane Doe',
+        'author': 'Goh Xu Hao',
         'title': 'Blog Post 2',
         'content': 'Second post content',
-        'date_posted': 'April 21, 2018'
+        'date_posted': '7th December, 2021'
     }
 ]
 
@@ -97,42 +98,87 @@ def contact():
     return render_template('contact.html')
 
 
-@app.route('/plot')
+@app.route('/graph')
 def plotting():
-    a = ReadAPI()
-    print(a)
-    plt.xlabel('Time')
-    plt.ylabel('Temp (deg C)')
-    plt.xticks(rotation=90)
-    plt.subplots_adjust(bottom=0.30)
-    plt.plot(list(a.keys().sort()), list(a.values()))
-    img = io.BytesIO()
-    plt.savefig(img, format='png')
-    img.seek(0)
-    plot_url = base64.b64encode(img.getvalue()).decode()
-    plt.show()
-    return '<img src="data:image/png;base64,{}">'.format(plot_url)
+    def formatDateTime(dateTime):
+        a = re.sub(r'[A-Z]', ' ', dateTime).rstrip().split()
+        b = a[0].split('-')
+        b[0], b[1] = b[2], b[1]
+        b = '-'.join(b[:2])
+        # print(b)
+        return f"{b} {a[1]}"
+
+    def ReadAPI():
+        # API URL
+        response = requests.get("https://api.thingspeak.com/channels/1585193/feeds.json?results=2000000")
+        temp = []
+        time_arr = []
+        humidity_arr = []
+        data = response.json()
+        for i in data['feeds']:
+            # print(i['field1'], i['created_at'])
+            time = formatDateTime(i['created_at'])
+            # print(time)
+            temp.append(i['field1'])
+            time_arr.append(time)
+            humidity_arr.append(i['field2'])
+        replacements = {None: "20", "null": "20"}
+        replacer = replacements.get
+        humidity_arr = [replacer(x, x) for x in humidity_arr]
+        print(humidity_arr)
+        return temp, time_arr, humidity_arr
+
+    if request.method == 'GET':
+        temp, time_arr, humidity = ReadAPI()
+        temp = temp[-10:]
+        time_arr = time_arr[-10:]
+        plt.plot(time_arr, temp)
+        plt.plot(time_arr, humidity)
+        plt.xlabel('Time')
+        plt.ylabel('Temperature')
+        plt.title('Temperature over time')
+        plt.grid(True)
+        plt.savefig('temperature.png')
+        img = io.BytesIO()
+        plt.savefig(img, format='png')
+        img.seek(0)
+        plot_url = base64.b64encode(img.getvalue()).decode()
+        return render_template('plot.html', plot_url=plot_url)
 
 
-def formatDateTime(dateTime):
-    a = re.sub(r'[A-Z]', ' ', dateTime).rstrip().split()
-    b = a[0].split('-')
-    b[0], b[1] = b[2], b[1]
-    b = '-'.join(b[:2])
-    # print(b)
-    return f"{b} {a[1]}"
+@app.route('/data')
+def data():
+    def formatDateTime(dateTime):
+        a = re.sub(r'[A-Z]', ' ', dateTime).rstrip().split()
+        b = a[0].split('-')
+        b[0], b[1] = b[2], b[1]
+        b = '-'.join(b[:2])
+        # print(b)
+        return f"{b} {a[1]}"
+
+    def ReadAPI():
+        # API URL
+        response = requests.get("https://api.thingspeak.com/channels/1585193/feeds.json?results=2000000")
+        temp = []
+        time_arr = []
+        data = response.json()
+        for i in data['feeds']:
+            print(i['field1'], i['created_at'])
+            time = formatDateTime(i['created_at'])
+            print(time)
+            temp.append(i['field1'])
+            time_arr.append(time)
+        return temp, time_arr
+
+    if request.method == 'GET':
+        temp, time_arr = ReadAPI()
+        temp = temp[-10:]
+        time_arr = time_arr[-10:]
+        return jsonify({'time': time_arr, 'temp': temp})
 
 
-def ReadAPI():
-    response = requests.get("https://api.thingspeak.com/channels/1585193/feeds.json?results=10000")
-    a = {}
-    data = response.json()
-    for i in data['feeds']:
-        print(i['field1'], i['created_at'])
-        time = formatDateTime(i['created_at'])
-        print(time)
-        a.update({time: i['field1']})
-    return a
+# def main():
+#     plotting()
 
 
 if __name__ == '__main__':
