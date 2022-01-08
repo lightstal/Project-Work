@@ -1,7 +1,6 @@
-
 from flask import render_template, url_for, flash, redirect, request, Blueprint
 from blog import app, db, bcrypt
-from blog.forms import RegistrationForm, LoginForm
+from blog.forms import RegistrationForm, LoginForm, UpdateAccountForm
 from blog.models import User, Post
 from flask_login import login_user, current_user, logout_user, login_required
 import matplotlib.pyplot as plt
@@ -53,7 +52,6 @@ def convertToInt(data):
         return i if f == i else f
     except ValueError:
         return data
-
 
 
 posts = [
@@ -119,10 +117,14 @@ def register():
 def contact():
     return render_template('contact.html')
 
+
 @app.route('/account')
 @login_required
 def account():
-    return render_template('account.html' , title='Account')
+    form = UpdateAccountForm()
+    image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
+    return render_template('account.html', title='Account', image_file=image_file, form=form)
+
 
 @app.route('/logout')
 def logout():
@@ -132,7 +134,8 @@ def logout():
 
 @app.route('/graph')
 def plotting():
-    temp_list, humidity_list, timings_list, raw_data_list = get_data("https://api.thingspeak.com/channels/1585193/feeds.json?results=2000000")
+    temp_list, humidity_list, timings_list, raw_data_list = get_data(
+        "https://api.thingspeak.com/channels/1585193/feeds.json?results=2000000")
     fig, ax1 = plt.subplots()
     color = 'tab:red'
     ax1.set_xlabel('Time')
@@ -151,11 +154,13 @@ def plotting():
     plt.grid(True)
     plt.show()
 
+
 @app.route('/data')
 def data():
-    temp_list, humidity_list, timings_list, raw_data_list = get_data("https://api.thingspeak.com/channels/1585193/feeds.json?results=2000000")
-    return render_template('data.html', temp_list=temp_list, humidity_list=humidity_list, timings_list=timings_list, raw_data_list=raw_data_list)
-
+    temp_list, humidity_list, timings_list, raw_data_list = get_data(
+        "https://api.thingspeak.com/channels/1585193/feeds.json?results=2000000")
+    return render_template('data.html', temp_list=temp_list, humidity_list=humidity_list, timings_list=timings_list,
+                           raw_data_list=raw_data_list)
 
 # @app.route('/data')
 # def data():
