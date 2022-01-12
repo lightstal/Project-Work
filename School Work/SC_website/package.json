@@ -1,0 +1,19 @@
+{
+  "name": "assignment",
+  "version": "1.0.0",
+  "description": "secure coding",
+  "main": "bin/runner.js",
+  "scripts": {
+    "start": "node bin/runner.js",
+    "dev": "nodemon bin/runner.js"
+  },
+  "author": "WeiLiang",
+  "dependencies": {
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "mysql": "^2.18.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  }
+}
