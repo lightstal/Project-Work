@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const CryptoJS = require("crypto-js");
 
 const users = require('../models/users');
 const contentChecker = require('../middlewares/content-checker');
@@ -19,9 +20,12 @@ router.get('/:id', (req, res) => {
         res.status(200).send(result);
     });
 });
-
+//Registration Endpoint
 router.post('/', contentChecker([ 'username', 'password', 'firstname', 'lastname', 'email' ]), (req, res) => {
     let user = req.body;
+    console.log(req.body.password)
+    var hash = CryptoJS.SHA256(req.body.password).toString();
+    user.password = hash;
     users.insert(user, (err, result) => {
         if (err) return res.status(500).send({ message: 'an error had occurred' });
         res.status(201).send(result);

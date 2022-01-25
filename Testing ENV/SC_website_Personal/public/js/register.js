@@ -15,8 +15,6 @@ $(document).ready(function () {
 
         let data = $(this).serializeObject();
         let cipherPass = CryptoJS.AES.encrypt(data.password, config.secretKey);
-        console.log(cipherPass)
-        console.log(data)
         if (data.password != data['confirm-password']) {
             $('.err-msg').html(`your passwords do not match`);
             return;
